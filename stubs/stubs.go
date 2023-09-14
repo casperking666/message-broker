@@ -11,23 +11,23 @@ type Pair struct {
 
 type PublishRequest struct {
 	Topic string
-	Pair Pair
+	Pair  Pair
 }
 
-
 type ChannelRequest struct {
-	Topic string
+	Topic  string
 	Buffer int
 }
 
 type Subscription struct {
-	Topic string
+	Topic          string
 	FactoryAddress string
-	Callback string
+	Callback       string
 }
 
 type JobReport struct {
-	Result int
+	Result  int
+	Message string
 }
 
 type StatusReport struct {

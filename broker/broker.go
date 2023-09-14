@@ -1,15 +1,17 @@
 package main
 
-import ("net/rpc"
+import (
 	"errors"
-	"net"
-	"sync"
+	"flag"
 	"fmt"
+	"net"
+	"net/rpc"
+	"sync"
 	"uk.ac.bris.cs/distributed3/pairbroker/stubs"
-	"flag")
+)
 
 var (
-	topics = make(map[string]chan stubs.Pair)
+	topics  = make(map[string]chan stubs.Pair)
 	topicmx sync.RWMutex
 )
 
@@ -19,12 +21,12 @@ func createTopic(topic string, buflen int) {
 	defer topicmx.Unlock()
 	if _, ok := topics[topic]; !ok {
 		topics[topic] = make(chan stubs.Pair, buflen)
-		fmt.Println("Created channel #",topic)
+		fmt.Println("Created channel #", topic)
 	}
 }
 
 //The Pair is published to the topic.
-func publish(topic string, pair stubs.Pair) (err error){
+func publish(topic string, pair stubs.Pair) (err error) {
 	topicmx.RLock()
 	defer topicmx.RUnlock()
 	if ch, ok := topics[topic]; ok {
@@ -37,7 +39,7 @@ func publish(topic string, pair stubs.Pair) (err error){
 
 //The subscriber loops run asynchronously, reading from the topic and sending the err
 //'job' pairs to their associated subscriber.
-func subscriber_loop(topic chan stubs.Pair, client *rpc.Client, callback string ){
+func subscriber_loop(topic chan stubs.Pair, client *rpc.Client, callback string) {
 	for {
 		job := <-topic
 		response := new(stubs.JobReport)
@@ -57,7 +59,7 @@ func subscriber_loop(topic chan stubs.Pair, client *rpc.Client, callback string 
 //The subscribe function registers a worker to the topic, creating an RPC client,
 //and will use the given callback string as the callback function whenever work
 //is available.
-func subscribe(topic string, factoryAddress string, callback string) (err error){
+func subscribe(topic string, factoryAddress string, callback string) (err error) {
 	fmt.Println("Subscription request")
 	topicmx.RLock()
 	ch := topics[topic]
@@ -66,6 +68,7 @@ func subscribe(topic string, factoryAddress string, callback string) (err error)
 	if err == nil {
 		go subscriber_loop(ch, client, callback)
 	} else {
+		fmt.Println(factoryAddress)
 		fmt.Println("Error subscribing ", factoryAddress)
 		fmt.Println(err)
 		return err
@@ -73,7 +76,7 @@ func subscribe(topic string, factoryAddress string, callback string) (err error)
 	return
 }
 
-type Broker struct {}
+type Broker struct{}
 
 func (b *Broker) CreateChannel(req stubs.ChannelRequest, res *stubs.StatusReport) (err error) {
 	createTopic(req.Topic, req.Buffer)
@@ -93,8 +96,8 @@ func (b *Broker) Publish(req stubs.PublishRequest, res *stubs.StatusReport) (err
 	return err
 }
 
-func main(){
-	pAddr := flag.String("port","8030","Port to listen on")
+func main() {
+	pAddr := flag.String("port", "8030", "Port to listen on")
 	flag.Parse()
 	rpc.Register(&Broker{})
 	listener, _ := net.Listen("tcp", ":"+*pAddr)
