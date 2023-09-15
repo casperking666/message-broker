@@ -83,6 +83,7 @@ func (b *Broker) CreateChannel(req stubs.ChannelRequest, res *stubs.StatusReport
 	return
 }
 
+//
 func (b *Broker) Subscribe(req stubs.Subscription, res *stubs.StatusReport) (err error) {
 	err = subscribe(req.Topic, req.FactoryAddress, req.Callback)
 	if err != nil {
